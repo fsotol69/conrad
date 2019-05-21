@@ -3,8 +3,15 @@ let requestId;
 // Canvas and context
 let canvas;
 let ctx;
-let canvasWidth;
-let canvasHeight;
+let canvasWidth = 500;
+let canvasHeight = 100;
+// Floors
+let floors = {
+  floor1 : 0,
+  floor2 : canvasHeight * 1 / 4,
+  floor3 : canvasHeight * 2 / 4,
+  floor4 : canvasHeight * 3 / 4
+}
 // Keys
 let Keys = {
   // up : false,
@@ -14,7 +21,7 @@ let Keys = {
 }
 // Keys Listener 
 window.onkeydown = function(e) {
-  var kc = e.keyCode;
+  let kc = e.keyCode;
   e.preventDefault();
 
   if      (kc === 37) Keys.left = true; 
@@ -24,7 +31,7 @@ window.onkeydown = function(e) {
 };
 
 window.onkeyup = function(e) {
-  var kc = e.keyCode;
+  let kc = e.keyCode;
   e.preventDefault();
 
   if      (kc === 37) Keys.left = false;
@@ -35,6 +42,8 @@ window.onkeyup = function(e) {
 // SpriteSheets and SpriteData variables
 let spritesheet = new Image();
 spritesheet.src = '../img/conrad_alpha_back.png';
+let spritesheet_mono = new Image();
+spritesheet_mono.src = '../img/walk.png';
 let spritedata = [
   { x: 19, y: 49, w: 10, h: 39 },
   { x: 35, y: 50, w: 15, h: 38 },
@@ -63,6 +72,23 @@ let spritedata_back = [
   {x: 329, y: 50, w: 16, h: 38},
   {x: 310, y: 50, w: 11, h: 38}
 ];
+let walk_right = [
+  {x:13, y:12, w:11, h:49},
+  {x:33, y:12, w:20, h:49},
+  {x:62, y:12, w:29, h:48},
+  {x:98, y:12, w:26, h:48},
+  {x:132, y:12, w:21, h:49},
+  {x:165, y:12, w:15, h:49}
+];
+let walk_left = [
+  {x:368, y:12, w:11, h:49},
+  {x:339, y:12, w:20, h:49},
+  {x:301, y:12, w:29, h:48},
+  {x:268, y:12, w:26, h:48},
+  {x:239, y:12, w:21, h:49},
+  {x:212, y:12, w:15, h:49}
+];
+
 // Instatiates a Character
 let conrad_character_01;
 let conrad_character_02;
@@ -79,8 +105,6 @@ function preload() {
 
 // Sets canvas and context
 function setup() {
-  canvasWidth = 500;
-  canvasHeight = 500;
   canvas = document.getElementById('canvas');
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
@@ -103,10 +127,10 @@ start();
 //setInterval(function() {
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   drawCharacters(conrad_character_01);
-  drawCharacters(conrad_character_02);
-  drawCharacters(conrad_character_03);
-  drawCharacters(conrad_character_04);
-  drawCharacters(conrad_character_05);
+  // drawCharacters(conrad_character_02);
+  // drawCharacters(conrad_character_03);
+  // drawCharacters(conrad_character_04);
+  // drawCharacters(conrad_character_05);
 }, 1000/12);
 
 class character {
@@ -116,15 +140,24 @@ class character {
     this.y = y;
     this.speed = speed;
     this.frame_speed = 1;
-    this.sprite_Sheet = new Image(); 
-    this.sprite_Sheet.src = '../img/conrad_alpha_back.png';
-    this.sprite_Data = spritedata;
+    this.sprite_Sheet = spritesheet_mono;
+    // this.sprite_Sheet = new Image(); 
+    // this.sprite_Sheet.src = '../img/walk.png';
+    this.sprite_Data = walk_right;
     this.index = 0;
-    this.len = spritedata.length;
+    this.len = this.sprite_Data.length;
   }
 
   draw(ctx) {
 
+    if(Keys.left){
+      this.sprite_Data = walk_left;
+      if(this.speed > 0) this.speed *= -1;
+    }
+    if(Keys.right){
+      this.sprite_Data = walk_right;
+      if(this.speed < 0) this.speed *= -1;
+    }
     let i = this.index % this.len;
     let x = this.sprite_Data[i].x;
     let y = this.sprite_Data[i].y;
@@ -148,12 +181,12 @@ class character {
 
   animate() {
     this.index += this.frame_speed;
-    this.x += this.speed;
     if(this.x >= canvas.width){
       this.x = 0;
-    } else {
-      this.x += this.speed;
-    }
+    } else if(this.x < 0){
+      this.x = canvas.width;
+    } 
+    this.x += this.speed;
     /*
     if(this.x >= canvas.width || this.x < 0){
       this.speed *= -1; 
@@ -168,11 +201,11 @@ class character {
   }
 }
 
-conrad_character_01 = new character(2, 30, 5);
-conrad_character_02 = new character(3, 30, 55);
-conrad_character_03 = new character(1, 30, 105);
-conrad_character_04 = new character(5, 30, 155);
-conrad_character_05 = new character(2, 30, 205);
+conrad_character_01 = new character(2, 30, 50);
+// conrad_character_02 = new character(3, 30, 55);
+// conrad_character_03 = new character(1, 30, 105);
+// conrad_character_04 = new character(5, 30, 155);
+// conrad_character_05 = new character(2, 30, 205);
 
 
 
@@ -195,7 +228,7 @@ function getJSON() {
   loadJSON(function(response) {
     let actual_JSON = JSON.parse(response);
     //console.log(actual_JSON.walk[0].position);
-    var objectKeys = Object.keys(actual_JSON);
+    let objectKeys = Object.keys(actual_JSON);
     console.log(actual_JSON.walk.length);
     for (i = 0; i < actual_JSON.walk.length; i++) {
       let data = actual_JSON.walk[i];
